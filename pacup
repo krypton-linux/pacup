@@ -3,7 +3,7 @@
 function usage() {
   cat <<EOM
 使用方法: $(basename "$0") [OPTION]...
-    -a          APTのみ実行
+    -p          pacmanのみ実行
     -y		'y'の入力をスキップします
     -h          ヘルプを表示します
 EOM
@@ -12,10 +12,10 @@ EOM
 while (($#>0)); do
   case $1 in
     a|-a|--apt)
-      PACUP_MOD="apt"
+      PACUP_MOD="pacman"
       ;;
     y|-y|--yes)
-      PACUP_YES=" -y"
+      PACUP_YES=" --noconfirm"
       ;;
     h|-h|--help)
       usage
@@ -37,17 +37,16 @@ function PACUP_SYS() {
   : #SYS
 }
 
-function PACUP_APT() {
-  sudo apt update
-  sudo apt$PACUP_YES upgrade
-  sudo apt$PACUP_YES autoremove
+function PACUP_PAC() {
+  sudo yay -Syu
+  sudo yay -Yc
 }
 
 if [ "$PACUP_MOD" == "apt" ]; then
-   PACUP_APT
+   PACUP_PAC
   if [ $? != 0 ]; then
     echo -e "\nAPTコマンドの実行はRoot(管理者)権限を要求します｡\nもう一度お試しください｡\n"
-    PACUP_APT
+    PACUP_PAC
   fi
   exit 0
 fi
@@ -70,9 +69,9 @@ if [ $? != 0 ]; then
 fi
 echo -e "Snapパッケージをアップデートしました"
 
-echo -e "\nDebianパッケージをアップデートします"
-PACUP_APT
-echo -e "Debianパッケージをアップデートしました"
+echo -e "\nArchパッケージをアップデートします"
+PACUP_PAC
+echo -e "Archパッケージをアップデートしました"
 
 sleep 7
 
