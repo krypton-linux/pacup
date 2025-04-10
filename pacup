@@ -6,73 +6,68 @@ function usage() {
     -p          pacmanのみ実行
     -y		'y'の入力をスキップします
     -h          ヘルプを表示します
+    -c     アップデート後、システムをクリーンアップします
+           ただし、ダウングレードが難しくなるため、推奨しません。
+
 EOM
+}
+
+function update_sys() {
+    sudo pacman -Syu $PACUP_YES
+}
+
+function update_aur() {
+    yay -Syu
+}
+
+function update_flatpak() {
+    flatpak update $PACUP_FLATPAK_YES
+}
+
+function clean() {
+    yay -Yc
+    sudo pacman -Sc
+}
+
+function update() {
+    if [PACUP_PAC == true]; then
+        update_sys
+    else
+        update_sys
+        update_aur
+        update_flatpak
+    fi
+    if [PACUP_CLEAN == true]; then
+        clean
+    fi
 }
 
 while (($#>0)); do
   case $1 in
-    a|-a|--apt)
-      PACUP_MOD="pacman"
+    p|-p|--pacman)
+      PACUP_PAC=true
       ;;
     y|-y|--yes)
       PACUP_YES=" --noconfirm"
+      PACUP_FLATPAK_YES=" -y"
       ;;
     h|-h|--help)
       usage
       exit 0
+      ;;
+    c|-c|--clean)
+      PACUP_CLEAN=true
       ;;
     *)
       usage
       exit 1
       ;;
   esac
-  shift
+shift
 done
 
-function PACUP_FPK() {
-  : #FPK
-}
+update()
 
-function PACUP_SYS() {
-  : #SYS
-}
-
-function PACUP_PAC() {
-  sudo yay -Syu
-  sudo yay -Yc
-}
-
-if [ "$PACUP_MOD" == "apt" ]; then
-   PACUP_PAC
-  if [ $? != 0 ]; then
-    echo -e "\nAPTコマンドの実行はRoot(管理者)権限を要求します｡\nもう一度お試しください｡\n"
-    PACUP_PAC
-  fi
-  exit 0
-fi
-
-echo -e "Flatpakパッケージをアップデートします"
-PACUP_FPK
-echo -e "Flatpakパッケージをアップデートしました"
-
-echo -e "\nSnapパッケージをアップデートします"
-PACUP_SYS
-if [ $? != 0 ]; then
-  echo -e "\nRoot(管理者)権限を要求しています｡\nもう一度お試しください｡"
-  PACUP_SYS
-  if [ $? != 0 ]; then
-    echo -e "\n権限の昇格に失敗したため､ 実行を終了しました｡"
-    exit 1
-  fi
-   echo -e "\n権限の昇格に失敗したため､ 実行を終了しました｡"
-   exit 1
-fi
-echo -e "Snapパッケージをアップデートしました"
-
-echo -e "\nArchパッケージをアップデートします"
-PACUP_PAC
-echo -e "Archパッケージをアップデートしました"
-
-sleep 7
+sleep 3
 
 exit 0
